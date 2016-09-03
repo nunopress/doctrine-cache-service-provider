@@ -1,6 +1,6 @@
 <?php
 
-namespace Sergiors\Silex\Provider;
+namespace NunoPress\Silex\Provider;
 
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;

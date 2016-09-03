@@ -1,10 +1,10 @@
 <?php
 
-namespace Sergiors\Silex\Tests\Provider;
+namespace NunoPress\Silex\Tests\Provider;
 
 use Pimple\Container;
 use Doctrine\Common\Cache\ApcuCache;
-use Sergiors\Silex\Provider\DoctrineCacheServiceProvider;
+use NunoPress\Silex\Provider\DoctrineCacheServiceProvider;
 
 class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
 {

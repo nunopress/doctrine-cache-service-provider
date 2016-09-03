@@ -1,5 +1,8 @@
 Doctrine Cache Service Provider
 -------------------------------
+
+> The documentation still in progress, this is the first fork for our version. In the future release's we change the documentation following our standard's.
+
 [![Build Status](https://travis-ci.org/sergiors/doctrine-cache-service-provider.svg?branch=1.0.0)](https://travis-ci.org/sergiors/doctrine-cache-service-provider)
 
 To see the complete documentation, check out [Doctrine Cache](http://doctrine-orm.readthedocs.org/projects/doctrine-orm/en/latest/reference/caching.html)
@@ -7,15 +10,13 @@ To see the complete documentation, check out [Doctrine Cache](http://doctrine-or
 Install
 -------
 ```
-composer require sergiors/doctrine-cache-service-provider
+composer require nunopress/doctrine-cache-service-provider
 ```
 
 How to use
 ----------
 ```php
-use Sergiors\Silex\Provider\DoctrineCacheServiceProvider;
-
-$app->register(new DoctrineCacheServiceProvider(), [
+$app->register(new \NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
     'cache.options' => [
         'driver' => 'redis',
         'namespace' => 'myapp',
@@ -33,9 +34,7 @@ $app->register(new DoctrineCacheServiceProvider(), [
 
 Something like this:
 ```php
-use Sergiors\Silex\Provider\DoctrineCacheServiceProvider;
-
-$app->register(new DoctrineCacheServiceProvider(), [
+$app->register(new \NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
     'caches.options' = [
         'conn1' => 'xcache',
         'conn2' => [

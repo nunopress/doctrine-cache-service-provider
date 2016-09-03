@@ -1,16 +1,20 @@
 {
-    "name": "sergiors/doctrine-cache-service-provider",
-    "description": "Doctrine Cache for Silex",
+    "name": "nunopress/doctrine-cache-service-provider",
+    "description": "Doctrine Cache Service Provider for Silex Microframework or any other Pimple Container project's",
     "license": "MIT",
     "authors": [
         {
             "name": "Sérgio Rafael Siqueira",
             "email": "sergio@inbep.com.br"
+        },
+        {
+            "name": "NunoPress LLC",
+            "email": "hello@nunopress.com"
         }
     ],
     "require": {
-        "php": ">=5.5",
-        "doctrine/cache": "~1.4",
+        "php": ">=5.6",
+        "doctrine/cache": "^1.6",
         "pimple/pimple": "^3.0"
     },
     "require-dev": {
@@ -24,12 +28,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Sergiors\\Silex\\": "src"
+            "NunoPress\\Silex\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Sergiors\\Silex\\Tests\\": "tests"
+            "NunoPress\\Silex\\Tests\\": "tests"
         }
     }
 }
