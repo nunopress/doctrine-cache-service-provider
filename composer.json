@@ -2,6 +2,11 @@
     "name": "nunopress/doctrine-cache-service-provider",
     "description": "Doctrine Cache Service Provider for Silex Microframework or any other Pimple Container project's",
     "license": "MIT",
+    "homepage": "http://nunopress.com",
+    "support": {
+        "issues": "https://github.com/nunopress/doctrine-cache-service-provider/issues",
+        "source": "https://github.com/nunopress/doctrine-cache-service-provider"
+    },
     "authors": [
         {
             "name": "Sérgio Rafael Siqueira",
@@ -35,5 +40,11 @@
         "psr-4": {
             "NunoPress\\Silex\\Tests\\": "tests"
         }
-    }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.1-dev"
+        }
+    },
+    "minimum-stability": "dev"
 }
