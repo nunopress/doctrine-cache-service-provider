@@ -18,6 +18,7 @@ use Doctrine\Common\Cache\CouchbaseCache;
 use Doctrine\Common\Cache\FileCache;
 use Doctrine\Common\Cache\PhpFileCache;
 use Doctrine\Common\Cache\PredisCache;
+use Doctrine\Common\Cache\RiakCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -248,6 +249,18 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new PredisCache($predis);
         });
 
+        $app['cache.riak'] = $app->protect(function ($options) {
+            if (true === empty($options['host']) or true === empty($options['port']) or true === empty($options['bucket'])) {
+                throw new \InvalidArgumentException('You must specify "host", "port" and "bucket" for Riak.');
+            }
+
+            $connection = new \Riak\Connection($options['host'], $options['port']);
+
+            $bucket = new \Riak\Bucket($connection, $options['bucket']);
+
+            return new RiakCache($bucket);
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -291,6 +304,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'predis':
                     return $app['cache.predis']($options);
+                    break;
+                case 'riak':
+                    return $app['cache.riak']($options);
                     break;
             }
 
