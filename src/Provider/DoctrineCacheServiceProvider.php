@@ -1,28 +1,26 @@
 <?php
 
 namespace NunoPress\Silex\Provider;
-
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
-use Doctrine\Common\Cache\ArrayCache;
-use Doctrine\Common\Cache\RedisCache;
 use Doctrine\Common\Cache\ApcuCache;
-use Doctrine\Common\Cache\XcacheCache;
-use Doctrine\Common\Cache\FilesystemCache;
-use Doctrine\Common\Cache\MongoDBCache;
+use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\ChainCache;
+use Doctrine\Common\Cache\CouchbaseCache;
+use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\Common\Cache\MemcacheCache;
 use Doctrine\Common\Cache\MemcachedCache;
-use Doctrine\Common\Cache\ApcCache;
-use Doctrine\Common\Cache\CouchbaseCache;
-use Doctrine\Common\Cache\FileCache;
+use Doctrine\Common\Cache\MongoDBCache;
 use Doctrine\Common\Cache\PhpFileCache;
 use Doctrine\Common\Cache\PredisCache;
+use Doctrine\Common\Cache\RedisCache;
 use Doctrine\Common\Cache\RiakCache;
-use Doctrine\Common\Cache\Sqlite3Cache;
+use Doctrine\Common\Cache\SQLite3Cache;
 use Doctrine\Common\Cache\VoidCache;
 use Doctrine\Common\Cache\WinCacheCache;
+use Doctrine\Common\Cache\XcacheCache;
 use Doctrine\Common\Cache\ZendDataCache;
+use Pimple\Container;
+use Pimple\ServiceProviderInterface;
+
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -66,6 +64,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             $container = new Container();
             foreach ($app['caches.options'] as $name => $options) {
                 $container[$name] = function () use ($app, $options) {
+                    /** @var \Doctrine\Common\Cache\CacheProvider $cache */
                     $cache = $app['cache.factory']($options['driver'], $options);
                     $cache->setNamespace($options['namespace']);
 
@@ -146,7 +145,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 throw new \InvalidArgumentException('You must specify "host" and "port" for Memcache.');
             }
 
-            $memcache = new Memcache();
+            $memcache = new \Memcache();
             $memcache->connect($options['host'], $options['port']);
 
             $cache = new MemcacheCache();
@@ -160,17 +159,13 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 throw new \InvalidArgumentException('You must specify "host" and "port" for Memcached.');
             }
 
-            $memcached = new Memcached();
+            $memcached = new \Memcached();
             $memcached->addServer($options['host'], $options['port']);
 
             $cache = new MemcachedCache();
             $cache->setMemcached($memcached);
 
             return $cache;
-        });
-
-        $app['cache.apc'] = $app->protect(function () {
-            return new ApcCache();
         });
 
         $app['cache.couchbase'] = $app->protect(function ($options) {
@@ -196,22 +191,6 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             $cache->setCouchbase($couchbase);
 
             return $cache;
-        });
-
-        $app['cache.file'] = $app->protect(function ($options) {
-            if (true === empty($options['directory'])) {
-                throw new \InvalidArgumentException('You must specify "directory" for File Cache.');
-            }
-
-            if (false === isset($options['extension'])) {
-                $options['extension'] = '';
-            }
-
-            if (false === isset($options['umask'])) {
-                $options['umask'] = 0002;
-            }
-
-            return new FileCache($options['directory'], $options['extension'], $options['umask']);
         });
 
         $app['cache.phpfile'] = $app->protect(function ($options) {
@@ -245,9 +224,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
             $predis = new \Predis\Client([
                 'scheme' => $options['scheme'],
-                'host' => (true === isset($options['host'] and false === isset($options['path']))) ? $options['host'] : '127.0.0.1',
-                'port' => (true === isset($options['port'] and false === isset($options['path']))) ? $options['port'] : 6379,
-                'path' => (true === isset($options['path']) and false === isset($options['host'] and false === isset($options['port']))) ? $options['path'] : ''
+                'host' => (true === isset($options['host']) and false === isset($options['path'])) ? $options['host'] : '127.0.0.1',
+                'port' => (true === isset($options['port']) and false === isset($options['path'])) ? $options['port'] : 6379,
+                'path' => (true === isset($options['path']) and false === isset($options['host']) and false === isset($options['port'])) ? $options['path'] : ''
             ], $options['options']);
 
             return new PredisCache($predis);
@@ -280,7 +259,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
             $sqlite3 = new \Sqlite3($options['file'], $options['flags'], $options['encryption_key']);
 
-            return new Sqlite3Cache($sqlite3, $options['table']);
+            return new SQLite3Cache($sqlite3, $options['table']);
         });
 
         $app['cache.void'] = $app->protect(function () {
@@ -324,14 +303,8 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 case 'memcached':
                     return $app['cache.memcached']($options);
                     break;
-                case 'apc':
-                    return $app['cache.apc']();
-                    break;
                 case 'couchbase':
                     return $app['cache.couchbase']($options);
-                    break;
-                case 'file':
-                    return $app['cache.file']($options);
                     break;
                 case 'phpfile':
                     return $app['cache.phpfile']($options);

@@ -19,7 +19,7 @@ trait DoctrineCacheTrait
 
 	/**
 	 * @param string $id
-	 * @return mixed
+	 * @return bool
 	 */
 	public function containsCache($id)
 	{
@@ -30,7 +30,7 @@ trait DoctrineCacheTrait
      * @param string $id
      * @param mixed $data
      * @param int|bool $lifeTime
-     * @return mixed
+     * @return bool
      */
     public function saveCache($id, $data, $lifeTime = false)
     {
@@ -39,10 +39,19 @@ trait DoctrineCacheTrait
 
     /**
 	 * @param string $id
-	 * @return mixed
+	 * @return bool
 	 */
 	public function deleteCache($id)
 	{
 		return $this['cache']->delete($id);
 	}
+
+    /**
+     * @param string $connection
+     * @return \Doctrine\Common\Cache\Cache
+     */
+	public function caches($connection)
+    {
+        return $this['caches'][$connection];
+    }
 }
