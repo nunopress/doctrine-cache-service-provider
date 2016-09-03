@@ -17,6 +17,7 @@ use Doctrine\Common\Cache\ApcCache;
 use Doctrine\Common\Cache\CouchbaseCache;
 use Doctrine\Common\Cache\FileCache;
 use Doctrine\Common\Cache\PhpFileCache;
+use Doctrine\Common\Cache\PredisCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -224,6 +225,29 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new PhpFileCache($options['directory'], $options['extension'], $options['umask']);
         });
 
+        $app['cache.predis'] = $app->protect(function ($options) {
+            if (true === empty($options['scheme'])) {
+                throw new \InvalidArgumentException('You must specify "scheme" for Predis.');
+            }
+
+            if ((true === empty($options['host']) or true === empty($options['port'])) or (true === empty($options['path']))) {
+                throw new \InvalidArgumentException('You must specify "host" and "port" or "path" for Predis.');
+            }
+
+            if (false === isset($options['options'])) {
+                $options['options'] = [];
+            }
+
+            $predis = new \Predis\Client([
+                'scheme' => $options['scheme'],
+                'host' => (true === isset($options['host'] and false === isset($options['path']))) ? $options['host'] : '127.0.0.1',
+                'port' => (true === isset($options['port'] and false === isset($options['path']))) ? $options['port'] : 6379,
+                'path' => (true === isset($options['path']) and false === isset($options['host'] and false === isset($options['port']))) ? $options['path'] : ''
+            ], $options['options']);
+
+            return new PredisCache($predis);
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -264,6 +288,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'phpfile':
                     return $app['cache.phpfile']($options);
+                    break;
+                case 'predis':
+                    return $app['cache.predis']($options);
                     break;
             }
 
