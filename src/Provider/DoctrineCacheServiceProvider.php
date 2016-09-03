@@ -10,6 +10,9 @@ use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\Common\Cache\XcacheCache;
 use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\Common\Cache\MongoDBCache;
+use Doctrine\Common\Cache\MemcacheCache;
+use Doctrine\Common\Cache\MemcachedCache;
+use Doctrine\Common\Cache\ApcCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -120,6 +123,38 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new XcacheCache();
         });
 
+        $app['cache.memcache'] = $app->protect(function ($options) {
+            if (true === empty($options['host']) or true === empty($options['port'])) {
+                throw new \InvalidArgumentException('You must specify "host" and "port" for Memcache.');
+            }
+
+            $memcache = new Memcache();
+            $memcache->connect($options['host'], $options['port']);
+
+            $cache = new MemcacheCache();
+            $cache->setMemcache($memcache);
+
+            return $cache;
+        });
+
+        $app['cache.memcached'] = $app->protect(function ($options) {
+            if (true === empty($options['host']) or true === empty($options['port'])) {
+                throw new \InvalidArgumentException('You must specify "host" and "port" for Memcached.');
+            }
+
+            $memcached = new Memcached();
+            $memcached->addServer($options['host'], $options['port']);
+
+            $cache = new MemcachedCache();
+            $cache->setMemcached($memcached);
+
+            return $cache;
+        });
+
+        $app['cache.apc'] = $app->protect(function () {
+            return new ApcCache();
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -139,6 +174,15 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'filesystem':
                     return $app['cache.filesystem']($options);
+                    break;
+                case 'memcache':
+                    return $app['cache.memcache']($options);
+                    break;
+                case 'memcached':
+                    return $app['cache.memcached']($options);
+                    break;
+                case 'apc':
+                    return $app['cache.apc']();
                     break;
             }
 
