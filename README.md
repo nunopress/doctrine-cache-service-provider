@@ -1,7 +1,12 @@
 Doctrine Cache Service Provider
 -------------------------------
 
+>
 > The documentation still in progress, this is the first fork for our version. In the future release's we change the documentation following our standard's.
+>
+> We added all the Doctrine Cache Driver but some not tested, so please send a issue for every problem you can have using our Service Provider.
+>
+
 
 [![Build Status](https://travis-ci.org/sergiors/doctrine-cache-service-provider.svg?branch=1.0.0)](https://travis-ci.org/sergiors/doctrine-cache-service-provider)
 
