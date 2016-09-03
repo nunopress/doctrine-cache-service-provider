@@ -21,6 +21,7 @@ use Doctrine\Common\Cache\PredisCache;
 use Doctrine\Common\Cache\RiakCache;
 use Doctrine\Common\Cache\Sqlite3Cache;
 use Doctrine\Common\Cache\VoidCache;
+use Doctrine\Common\Cache\WinCacheCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -285,6 +286,10 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new VoidCache();
         });
 
+        $app['cache.wincache'] = $app->protect(function () {
+            return new WinCacheCache();
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -337,6 +342,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'void':
                     return $app['cache.void']();
+                    break;
+                case 'wincache':
+                    return $app['cache.wincache']();
                     break;
             }
 
