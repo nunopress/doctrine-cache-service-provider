@@ -14,6 +14,7 @@ use Doctrine\Common\Cache\ChainCache;
 use Doctrine\Common\Cache\MemcacheCache;
 use Doctrine\Common\Cache\MemcachedCache;
 use Doctrine\Common\Cache\ApcCache;
+use Doctrine\Common\Cache\CouchbaseCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -164,6 +165,31 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new ApcCache();
         });
 
+        $app['cache.couchbase'] = $app->protect(function ($options) {
+            if (true === empty($options['host']) or true === empty($options['port'])) {
+                throw new \InvalidArgumentException('You must specify "host" and "port" for Couchbase.');
+            }
+
+            if (false === isset($options['username'])) {
+                $options['username'] = '';
+            }
+
+            if (false === isset($options['password'])) {
+                $options['password'] = '';
+            }
+
+            if (false === isset($options['bucket'])) {
+                $options['bucket'] = 'default';
+            }
+
+            $couchbase = new \Couchbase(sprintf('%s:%s', $options['host'], $options['port']), $options['username'], $options['password'], $options['bucket']);
+
+            $cache = new CouchbaseCache();
+            $cache->setCouchbase($couchbase);
+
+            return $cache;
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -195,6 +221,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'apc':
                     return $app['cache.apc']();
+                    break;
+                case 'couchbase':
+                    return $app['cache.couchbase']($options);
                     break;
             }
 
