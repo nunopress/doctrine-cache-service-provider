@@ -22,6 +22,7 @@ use Doctrine\Common\Cache\RiakCache;
 use Doctrine\Common\Cache\Sqlite3Cache;
 use Doctrine\Common\Cache\VoidCache;
 use Doctrine\Common\Cache\WinCacheCache;
+use Doctrine\Common\Cache\ZendDataCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -290,6 +291,10 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new WinCacheCache();
         });
 
+        $app['cache.zenddata'] = $app->protect(function () {
+            return new ZendDataCache();
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -345,6 +350,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'wincache':
                     return $app['cache.wincache']();
+                    break;
+                case 'zenddata':
+                    return $app['cache.zenddata']();
                     break;
             }
 
