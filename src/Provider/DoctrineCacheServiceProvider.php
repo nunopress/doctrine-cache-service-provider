@@ -20,6 +20,7 @@ use Doctrine\Common\Cache\PhpFileCache;
 use Doctrine\Common\Cache\PredisCache;
 use Doctrine\Common\Cache\RiakCache;
 use Doctrine\Common\Cache\Sqlite3Cache;
+use Doctrine\Common\Cache\VoidCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -280,6 +281,10 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new Sqlite3Cache($sqlite3, $options['table']);
         });
 
+        $app['cache.void'] = $app->protect(function () {
+            return new VoidCache();
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -329,6 +334,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'sqlite3':
                     return $app['cache.sqlite3']($options);
+                    break;
+                case 'void':
+                    return $app['cache.void']();
                     break;
             }
 
