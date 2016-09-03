@@ -19,6 +19,7 @@ use Doctrine\Common\Cache\FileCache;
 use Doctrine\Common\Cache\PhpFileCache;
 use Doctrine\Common\Cache\PredisCache;
 use Doctrine\Common\Cache\RiakCache;
+use Doctrine\Common\Cache\Sqlite3Cache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -261,6 +262,24 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new RiakCache($bucket);
         });
 
+        $app['cache.sqlite3'] = $app->protect(function ($options) {
+            if (true === empty($options['filename']) or true === empty($options['table'])) {
+                throw new \InvalidArgumentException('You must specify "filename" and "table" for Sqlite3.');
+            }
+
+            if (false === isset($options['flags'])) {
+                $options['flags'] = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE;
+            }
+
+            if (false === isset($options['encryption_key'])) {
+                $options['encryption_key'] = null;
+            }
+
+            $sqlite3 = new \Sqlite3($options['file'], $options['flags'], $options['encryption_key']);
+
+            return new Sqlite3Cache($sqlite3, $options['table']);
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -307,6 +326,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'riak':
                     return $app['cache.riak']($options);
+                    break;
+                case 'sqlite3':
+                    return $app['cache.sqlite3']($options);
                     break;
             }
 
