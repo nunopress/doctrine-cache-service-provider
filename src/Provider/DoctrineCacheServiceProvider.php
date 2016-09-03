@@ -1,6 +1,7 @@
 <?php
 
 namespace NunoPress\Silex\Provider;
+
 use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\ChainCache;
@@ -18,15 +19,20 @@ use Doctrine\Common\Cache\VoidCache;
 use Doctrine\Common\Cache\WinCacheCache;
 use Doctrine\Common\Cache\XcacheCache;
 use Doctrine\Common\Cache\ZendDataCache;
+use NunoPress\Doctrine\Common\Cache\PDOCache;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
 
 /**
- * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
+ * Class DoctrineCacheServiceProvider
+ * @package NunoPress\Silex\Provider
  */
 class DoctrineCacheServiceProvider implements ServiceProviderInterface
 {
+    /**
+     * @param Container $app
+     */
     public function register(Container $app)
     {
         $app['caches.options.initializer'] = $app->protect(function () use ($app) {
@@ -64,8 +70,14 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             $container = new Container();
             foreach ($app['caches.options'] as $name => $options) {
                 $container[$name] = function () use ($app, $options) {
+                    /*
+                    if (false === isset($options['parameters']) or false === is_array($options['parameters'])) {
+                        $options['parameters'] = [];
+                    }
+                    */
+
                     /** @var \Doctrine\Common\Cache\CacheProvider $cache */
-                    $cache = $app['cache.factory']($options['driver'], $options);
+                    $cache = $app['cache.factory']($options['driver'], $options['parameters']);
                     $cache->setNamespace($options['namespace']);
 
                     return $cache;
@@ -132,12 +144,24 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new XcacheCache();
         });
 
-        $app['cache.chain'] = $app->protect(function ($options) {
-            if (true === empty($options['providers']) or false === is_array($options['providers'])) {
-                throw new \InvalidArgumentException('You must specify "providers" array for Chain Cache.');
+        $app['cache.chain'] = $app->protect(function ($options) use ($app) {
+            if (false === is_array($options)) {
+                throw new \InvalidArgumentException('You must specify array for Chain Cache.');
             }
 
-            return new ChainCache($options['providers']);
+            $caches = [];
+
+            foreach ($options as $option) {
+                /*
+                if (false === isset($option['parameters']) or false === is_array($option['parameters'])) {
+                    $option['parameters'] = [];
+                }
+                */
+
+                $caches[] = $app['cache.factory']($option['driver'], $option['parameters']);
+            }
+
+            return new ChainCache($caches);
         });
 
         $app['cache.memcache'] = $app->protect(function ($options) {
@@ -257,7 +281,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 $options['encryption_key'] = null;
             }
 
-            $sqlite3 = new \Sqlite3($options['file'], $options['flags'], $options['encryption_key']);
+            $sqlite3 = new \SQLite3($options['file'], $options['flags'], $options['encryption_key']);
 
             return new SQLite3Cache($sqlite3, $options['table']);
         });
@@ -272,6 +296,28 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
         $app['cache.zenddata'] = $app->protect(function () {
             return new ZendDataCache();
+        });
+
+        $app['cache.pdo'] = $app->protect(function ($options) {
+            if (true === empty($options['dns']) or true === empty($options['table'])) {
+                throw new \InvalidArgumentException('You must specify "dns" and "table" for PDO.');
+            }
+
+            if (false === isset($options['username'])) {
+                $options['username'] = '';
+            }
+
+            if (false === isset($options['password'])) {
+                $options['password'] = '';
+            }
+
+            if (false === isset($options['options'])) {
+                $options['options'] = [];
+            }
+
+            $pdo = new \PDO($options['dns'], $options['username'], $options['password'], $options['options']);
+
+            return new PDOCache($pdo, $options['table']);
         });
 
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
@@ -327,9 +373,12 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 case 'zenddata':
                     return $app['cache.zenddata']();
                     break;
+                case 'pdo':
+                    return $app['cache.pdo']($options);
+                    break;
             }
 
-            throw new \RuntimeException();
+            throw new \RuntimeException("Cache Driver <{$driver}> not supported");
         });
 
         // shortcuts for the "first" cache
@@ -342,6 +391,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
         $app['cache.default_options'] = [
             'driver' => 'array',
             'namespace' => null,
+            'parameters' => []
         ];
     }
 }

@@ -33,7 +33,7 @@ This service give the possible to use multiple connections (_example for use dif
 ```php
 // Register the service provider with multiple connections
 $app->register(new \NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
-    'cache.options' => [
+    'caches.options' => [
         'local' => [
             'driver' => 'xcache'
         ],
@@ -41,6 +41,13 @@ $app->register(new \NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
         'remote' => [
             'driver' => 'array',
             'namespace' => 'test'
+        ],
+        
+        'test' => [
+            'driver' => 'filesystem',
+            'parameters' => [
+                'directory' => '/cache'
+            ]
         ]
     ]
 ]);
@@ -87,17 +94,9 @@ Return the `Doctrine\Common\Cache\MemcacheCache` object.
 
 Return the `Doctrine\Common\Cache\MemcachedCache` object.
 
-#### cache.apc
-
-Return the `Doctrine\Common\Cache\ApcCache` object.
-
 #### cache.couchbase *
 
 Return the `Doctrine\Common\Cache\CouchbaseCache` object.
-
-#### cache.file
-
-Return the `Doctrine\Common\Cache\FileCache` object.
 
 #### cache.phpfile
 
@@ -127,6 +126,10 @@ Return the `Doctrine\Common\Cache\WinCacheCache` object.
 
 Return the `Doctrine\Common\Cache\ZendDataCache` object.
 
+#### cache.pdo
+
+Return the `NunoPress\Doctrine\Common\Cache\PDOCache` object.
+
 #### cache.factory
 
 This service used to choice the right cache driver.
@@ -139,6 +142,7 @@ Simple array with defined the default options. This the default options:
 $app['cache.default_options'] = [
     'driver' => 'array',
     'namespace' => null,
+    'parameters' => []
 ];
 ```
 
@@ -150,6 +154,25 @@ $app['cache.default_options'] = [
 $app->register(new NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
     'cache.options' => [
         'driver' => 'array'
+    ]
+]);
+```
+
+If you need more connections you can define with `caches.options` array following this example:
+
+```php
+$app->register(new NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
+    'caches.options' => [
+        'default' => [
+            'driver' => 'array'
+        ],
+        
+        'local' => [
+            'driver' => 'filesystem',
+            'parameters' => [
+                'cache_dir' => '/cache'
+            ]
+        ]
     ]
 ]);
 ```
@@ -206,26 +229,28 @@ No configuration.
 
 #### chain
 
-##### providers
-
 Register the cache drivers to use the Chain Cache, example:
 
 ```php
 $app->register(new NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
     'cache.options' => [
         'driver' => 'chain',
-        'providers' => [
-            $app['cache.array'],
-            $app['cache.void'],
-            $app['cache.filesystem']([
-                'cache_dir' => __DIR__ . '/../cache'
-            ])
+        'parameters' => [
+            [
+                'driver' => 'filesystem',
+                'parameters' => [
+                    'cache_dir' => __DIR__ . '/../cache'
+                ]
+            ],
+            [
+                'driver' => 'array'
+            ]
         ]
     ]
 ]);
 ```
 
-> This system to configure the Service Provider come back from the original author but our developers don't like it so in the future releases we change for sure this method.
+> This system to configure the Service Provider is under development, some modifications can change in the next release.
 
 #### memcache
 
@@ -246,10 +271,6 @@ Memcached server address.
 ##### port
 
 Memcached server port.
-
-#### apc
-
-No configuration.
 
 #### couchbase
 
@@ -272,20 +293,6 @@ Password for access to Couchbase server.
 ##### bucket (optional)
 
 Bucket name (_default is the default name for the bucket_).
-
-#### file
-
-##### directory
-
-Directory where the cache files are saved.
-
-##### extension (optional)
-
-Extension for the cache files.
-
-##### umask (optional)
-
-Umask for the cache files.
 
 #### phpfile
 
@@ -363,6 +370,24 @@ No configuration.
 
 No configuration.
 
+#### pdo
+
+##### dns
+
+For more information's about the format [see here](http://php.net/manual/en/pdo.drivers.php).
+
+##### username (optional)
+
+Username for connect to PDO.
+
+##### password (optional)
+
+Password for connect to PDO.
+
+##### options (optional)
+
+Options for connect to PDO.
+
 ### Usage
 
 The Config provider provides a `config` service:
@@ -431,7 +456,7 @@ $app['cache']->delete('cache_key');
 #### caches
 
 ```php
-// Chain cache: $app->caches('connection_name')->contains('cache_key');
+// Chain cache with DoctrineCacheTrai: $app->caches('connection_name')->contains('cache_key');
 $app['caches']['connection_name']->contains('cache_key');
 ```
 
