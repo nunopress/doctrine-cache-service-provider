@@ -16,6 +16,7 @@ use Doctrine\Common\Cache\MemcachedCache;
 use Doctrine\Common\Cache\ApcCache;
 use Doctrine\Common\Cache\CouchbaseCache;
 use Doctrine\Common\Cache\FileCache;
+use Doctrine\Common\Cache\PhpFileCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -207,6 +208,22 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new FileCache($options['directory'], $options['extension'], $options['umask']);
         });
 
+        $app['cache.phpfile'] = $app->protect(function ($options) {
+            if (true === empty($options['directory'])) {
+                throw new \InvalidArgumentException('You must specify "directory" for PhpFile Cache.');
+            }
+
+            if (false === isset($options['extension'])) {
+                $options['extension'] = '.doctrinecache.php';
+            }
+
+            if (false === isset($options['umask'])) {
+                $options['umask'] = 0002;
+            }
+
+            return new PhpFileCache($options['directory'], $options['extension'], $options['umask']);
+        });
+
         $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
             switch ($driver) {
                 case 'array':
@@ -244,6 +261,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'file':
                     return $app['cache.file']($options);
+                    break;
+                case 'phpfile':
+                    return $app['cache.phpfile']($options);
                     break;
             }
 
