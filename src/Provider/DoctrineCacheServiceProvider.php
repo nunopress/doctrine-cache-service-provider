@@ -10,6 +10,7 @@ use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\Common\Cache\XcacheCache;
 use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\Common\Cache\MongoDBCache;
+use Doctrine\Common\Cache\ChainCache;
 use Doctrine\Common\Cache\MemcacheCache;
 use Doctrine\Common\Cache\MemcachedCache;
 use Doctrine\Common\Cache\ApcCache;
@@ -123,6 +124,14 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new XcacheCache();
         });
 
+        $app['cache.chain'] = $app->protect(function ($options) {
+            if (true === empty($options['providers']) or false === is_array($options['providers'])) {
+                throw new \InvalidArgumentException('You must specify "providers" array for Chain Cache.');
+            }
+
+            return new ChainCache($options['providers']);
+        });
+
         $app['cache.memcache'] = $app->protect(function ($options) {
             if (true === empty($options['host']) or true === empty($options['port'])) {
                 throw new \InvalidArgumentException('You must specify "host" and "port" for Memcache.');
@@ -174,6 +183,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'filesystem':
                     return $app['cache.filesystem']($options);
+                    break;
+                case 'chain':
+                    return $app['cache.chain']($options);
                     break;
                 case 'memcache':
                     return $app['cache.memcache']($options);
