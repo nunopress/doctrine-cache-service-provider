@@ -8,7 +8,7 @@ Doctrine Cache have some cache drivers, for a complete list and updated you can 
 
 ### Parameters
 
-#### cache.options
+#### cache.profiles
 
 In this array you can configure every parameters for the Service Provider.
 
@@ -22,18 +22,20 @@ Here the list of every services used in this Service Provider.
 
 The Doctrine Cache driver implemented with `Doctrine\Common\Cache\Cache`. The main way to interact with the Service Provider.
 
-#### cache.options.initializer
+> This service use the **FIRST** profile available so take attention when you register the profiles for the order how you register.
 
-This service initialize the default options for the Service Provider.
+#### cache.profiles.initializer
 
-#### caches
+This service initialize the default profile for the Service Provider.
 
-This service give the possible to use multiple connections (_example for use different servers for different environments_), you can manage with this example:
+#### cache.stores
+
+This service use multiple profiles (_example for use different servers for different environments_), you can manage with this example:
 
 ```php
 // Register the service provider with multiple connections
 $app->register(new \NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
-    'caches.options' => [
+    'cache.profiles' => [
         'local' => [
             'driver' => 'xcache'
         ],
@@ -52,83 +54,119 @@ $app->register(new \NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
     ]
 ]);
 
-// Access to different connections
-$app['caches']['local']->fetch('cache_key');
+// Access to different profiles
+$app['cache.stores']['local']->fetch('cache_key');
 // or with DoctrineCacheTrait
-$app->caches('local')->fetch('cache_key');
+$app->cache('local')->fetch('cache_key');
 ```
 
-#### cache.filesystem
+#### cache.store.filesystem
 
 Return the `Doctrine\Common\Cache\FilesystemCache` object.
 
-#### cache.array
+#### cache.store.array
 
 Return the `Doctrine\Common\Cache\ArrayCache` object.
 
-#### cache.apcu
+#### cache.store.apcu
 
 Return the `Doctrine\Common\Cache\ApcuCache` object.
 
-#### cache.mongodb
+#### cache.store.mongodb
 
 Return the `Doctrine\Common\Cache\MongoDBCache` object.
 
-#### cache.redis
+#### cache.mongodb.connector
+
+return the `MongoCollection` object after connected to MongoDB server.
+
+#### cache.store.redis
 
 Return the `Doctrine\Common\Cache\RedisCache` object.
 
-#### cache.xcache
+#### cache.redis.connector
+
+Return the `Redis` object after connected to Redis server.
+
+#### cache.store.xcache
 
 Return the `Doctrine\Common\Cache\XcacheCache` object.
 
-#### cache.chain
+#### cache.store.chain
 
 Return the `Doctrine\Common\Cache\ChainCache` object.
 
-#### cache.memcache
+#### cache.store.memcache
 
 Return the `Doctrine\Common\Cache\MemcacheCache` object.
 
-#### cache.memcached
+#### cache.memcache.connector
+
+Return the `Memcache` object after connected to Memcache server.
+
+#### cache.store.memcached
 
 Return the `Doctrine\Common\Cache\MemcachedCache` object.
 
-#### cache.couchbase *
+#### cache.memcached.connector
+
+Return the `Memcached` object after connected to Memcached server.
+
+#### cache.store.couchbase
 
 Return the `Doctrine\Common\Cache\CouchbaseCache` object.
 
-#### cache.phpfile
+#### cache.couchbase.connector (need testing)
+
+Return the `Couchbase` object after connected to Couchbase server.
+
+#### cache.store.phpfile
 
 Return the `Doctrine\Common\Cache\PhpFileCache` object.
 
-#### cache.predis *
+#### cache.store.predis
 
 Return the `Doctrine\Common\Cache\PredisCache` object.
 
-#### cache.riak *
+#### cache.predis.connector (need testing)
+
+Return the `Predis\Client` object after connected to Predis server.
+
+#### cache.store.riak
 
 Return the `Doctrine\Common\Cache\RiakCache` object.
 
-#### cache.sqlite3
+#### cache.riak.connector (need testing)
+
+Return the `Riak\Bucket` object after connected to Riak server.
+
+#### cache.store.sqlite3
 
 Return the `Doctrine\Common\Cache\Sqlite3Cache` object.
 
-#### cache.void
+#### cache.sqlite3.connector
+
+Return the `Sqlite3` object after connected to Sqlite3.
+
+#### cache.store.void
 
 Return the `Doctrine\Common\Cache\VoidCache` object.
 
-#### cache.wincache
+#### cache.store.wincache
 
 Return the `Doctrine\Common\Cache\WinCacheCache` object.
 
-#### cache.zenddata
+#### cache.store.zenddata
 
 Return the `Doctrine\Common\Cache\ZendDataCache` object.
 
-#### cache.pdo
+#### cache.store.pdo
 
 Return the `NunoPress\Doctrine\Common\Cache\PDOCache` object.
+
+#### cache.pdo.connector
+
+Return the `PDO` object after connected to PDO server.
 
 #### cache.factory
 
@@ -146,23 +184,25 @@ $app['cache.default_options'] = [
 ];
 ```
 
-> The services suffixed with ***** need to be testing.
+> Not all connectors are tested, so please be careful and send any issue with that.
 
 ### Registering
 
 ```php
 $app->register(new NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
-    'cache.options' => [
-        'driver' => 'array'
+    'cache.profiles' => [
+        'default' => [
+            'driver' => 'array'
+        ]
     ]
 ]);
 ```
 
-If you need more connections you can define with `caches.options` array following this example:
+If you need more connections you can define more arrays following this example:
 
 ```php
 $app->register(new NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
-    'caches.options' => [
+    'cache.profiles' => [
         'default' => [
             'driver' => 'array'
         ],
@@ -233,17 +273,19 @@ Register the cache drivers to use the Chain Cache, example:
 
 ```php
 $app->register(new NunoPress\Silex\Provider\DoctrineCacheServiceProvider(), [
-    'cache.options' => [
-        'driver' => 'chain',
-        'parameters' => [
-            [
-                'driver' => 'filesystem',
-                'parameters' => [
-                    'cache_dir' => __DIR__ . '/../cache'
+    'cache.profiles' => [
+        'default' => [
+            'driver' => 'chain',
+            'parameters' => [
+                [
+                    'driver' => 'filesystem',
+                    'parameters' => [
+                        'cache_dir' => __DIR__ . '/../cache'
+                    ]
+                ],
+                [
+                    'driver' => 'array'
                 ]
-            ],
-            [
-                'driver' => 'array'
             ]
         ]
     ]
@@ -453,13 +495,43 @@ $app['cache']->save('cache_key', 'cache_value', 100); // the third param is a li
 $app['cache']->delete('cache_key');
 ```
 
-#### caches
+#### cache
 
 ```php
-// Chain cache with DoctrineCacheTrai: $app->caches('connection_name')->contains('cache_key');
-$app['caches']['connection_name']->contains('cache_key');
+// More readable with DoctrineCacheTrait: $app->cache('profile_name')->contains('cache_key');
+$app['cache.stores']['profile_name']->contains('cache_key');
 ```
 
 ### Customization
+
+#### DoctrineCacheTrait
+
+Our developers used a personal vision for the `cache` method, this our implementation:
+
+```php
+namespace App\Traits;
+
+/**
+ * Class DoctrineCacheTrait
+ * @package App\Traits
+ */
+trait DoctrineCacheTrait
+{
+    use \NunoPress\Silex\Application\DoctrineCacheTrait;
+
+    /**
+     * @param null $profile
+     * @return \Doctrine\Common\Cache\Cache
+     */
+    public function cache($profile = null)
+    {
+        $profile = $profile ?: $this['environment'];
+
+        return $this['cache.stores'][$profile];
+    }
+}
+```
+
+With this implementation we can use in our code `$app->cache()->get('cache_key')` and in `development` environment we use the `VoidCache` and in `production` we use another caching profile.
 
 > This section still in development because we need to rewrite all the configuration system for manage the driver options.

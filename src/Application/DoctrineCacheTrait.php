@@ -47,11 +47,11 @@ trait DoctrineCacheTrait
 	}
 
     /**
-     * @param string $connection
+     * @param string $profile
      * @return \Doctrine\Common\Cache\Cache
      */
-	public function caches($connection)
+	public function cache($profile)
     {
-        return $this['caches'][$connection];
+        return $this['cache.stores'][$profile];
     }
 }

@@ -15,8 +15,10 @@ class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
     {
         $app = $this->createApplication();
         $app->register(new DoctrineCacheServiceProvider(), [
-            'cache.options' => [
-                'driver' => 'apcu',
+            'cache.profiles' => [
+                'default' => [
+                	'driver' => 'apcu'
+                ],
             ],
         ]);
 
@@ -31,8 +33,10 @@ class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
     {
         $app = $this->createApplication();
         $app->register(new DoctrineCacheServiceProvider(), [
-            'cache.options' => [
-                'driver' => 'filesystem',
+            'cache.profiles' => [
+                'default' => [
+                	'driver' => 'filesystem'
+                ]
             ],
         ]);
         $app['cache'];
@@ -45,8 +49,10 @@ class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
     {
         $app = $this->createApplication();
         $app->register(new DoctrineCacheServiceProvider());
-        $app['caches.options'] = [
-            'conn1' => 'xcache',
+        $app['caches.profiles'] = [
+            'conn1' => [
+            	'driver' => 'xcache'
+            ],
             'conn2' => [
                 'driver' => 'redis',
             ],
@@ -56,8 +62,8 @@ class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
             ],
         ];
 
-        $this->assertSame($app['caches']['conn1'], $app['cache']);
-        $this->assertEquals('test', $app['caches']['conn3']->getNamespace());
+        $this->assertSame($app['cache.stores']['conn1'], $app['cache']);
+        $this->assertEquals('test', $app['cache.stores']['conn3']->getNamespace());
     }
 
     public function createApplication()
